@@ -9,21 +9,21 @@ import java.text.MessageFormat;
  * @summary
  * @since 2019/2/21
  */
-public class UserVisibleException extends RuntimeException {
+public class UserVisiableException extends RuntimeException {
 
     private static final long serialVersionUID = 8180463459790197559L;
 
     private Integer errorCode = 500;
 
-    public UserVisibleException() {
+    public UserVisiableException() {
     }
 
-    public UserVisibleException(Integer errorCode, String message, Object... args) {
+    public UserVisiableException(Integer errorCode, String message, Object... args) {
         super(MessageFormat.format(message, args));
         this.errorCode = errorCode;
     }
 
-    public UserVisibleException(Integer errorCode, String message) {
+    public UserVisiableException(Integer errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
     }

@@ -2,6 +2,7 @@ package com.paxing.test.kaoqin.config;
 
 import com.alibaba.fastjson.JSON;
 import com.paxing.test.kaoqin.exception.DefaultBizException;
+import com.paxing.test.kaoqin.exception.UserVisiableException;
 import org.apache.http.HttpStatus;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -97,18 +98,36 @@ public class WebExceptionHandler extends AbstractHandlerExceptionResolver {
         }
     }
 
+    /**
+     * 返回默认错误页面
+     * <p>
+     * <notice>
+     * 如果返回的modelAndView 中，有对象存在，会被解析成页面的方式，如果没有指定的viewName，则会触发【circular view path】错误
+     * 如果需要返回json 字符，则直接在响应流中写入即可。
+     * </notice>
+     *
+     * @param request
+     * @param response
+     * @param handler
+     * @param e
+     * @return
+     */
     private ModelAndView handlePage(HttpServletRequest request, HttpServletResponse response, Object handler,
                                     Exception e) {
-        ModelAndView modelAndView = new ModelAndView();
-        String message = e.getMessage();
+        ModelAndView modelAndView = new ModelAndView("/common/exception/500");
         if (e instanceof MaxUploadSizeExceededException) {
-            message = "文件太大";
+            modelAndView.addObject("message", "上传文件过大");
+        } else if (e instanceof UserVisiableException) {
+            UserVisiableException ex = (UserVisiableException) e;
+            modelAndView.addObject("code", ex.getErrorCode());
+            modelAndView.addObject("message", ex.getMessage());
         } else if (e instanceof NoHandlerFoundException) {
             response.setStatus(HttpStatus.SC_NOT_FOUND);
+            modelAndView.addObject("message", e.getMessage());
         } else {
             response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+            modelAndView.addObject("message", e.getMessage());
         }
-        handleException(request, response, message);
         return modelAndView;
     }
 

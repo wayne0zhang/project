@@ -1,5 +1,9 @@
 package com.paxing.test.kaoqin.config;
 
+import com.paxing.test.kaoqin.config.filter.WebFilter;
+import com.paxing.test.kaoqin.config.interceptor.RequestLoggerHandler;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -16,9 +20,14 @@ import java.util.List;
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
+    /**
+     * 添加拦截器
+     *
+     * @param registry
+     */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-
+        registry.addInterceptor(requestLoggerHandler()).excludePathPatterns("/api/**").addPathPatterns("/**");
     }
 
     /**
@@ -31,5 +40,23 @@ public class WebMvcConfig implements WebMvcConfigurer {
         resolvers.add(new WebExceptionHandler());
     }
 
+    /**
+     * 增加过滤器
+     *
+     * @return
+     */
+    @Bean
+    public FilterRegistrationBean webFilter() {
+        FilterRegistrationBean registrationBean = new FilterRegistrationBean();
+        registrationBean.setName("webFilter");
+        registrationBean.setFilter(new WebFilter());
+        registrationBean.addUrlPatterns("/*");
+        registrationBean.setOrder(1);
+        return registrationBean;
+    }
 
+    @Bean
+    public RequestLoggerHandler requestLoggerHandler() {
+        return new RequestLoggerHandler();
+    }
 }
