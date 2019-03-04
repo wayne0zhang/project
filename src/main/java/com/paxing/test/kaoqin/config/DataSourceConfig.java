@@ -123,7 +123,7 @@ public class DataSourceConfig {
 
     }
 
-    @Profile({"dev", "test", "off"})
+    @Profile({"development", "test", "off"})
     @Bean
     public JdbcTemplate jdbcTemplate(HikariDataSource HikariDataSource) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(HikariDataSource);

@@ -1,0 +1,41 @@
+# web 服务器配置
+server:
+  port: 8080
+  undertow:
+    # 设置IO线程数，它主要执行非阻塞的任务，他们会负责多个连接，默认设置 每个cpu一个线程
+    # 不要设置过大，设置过大，项目启动时会报：打开文件数过多
+    io-threads: 4
+    # 设置 阻塞任务线程池，当执行类似 servlet 请求阻塞io操作，undertow 会从这个线程池中获取线程
+    # 它的值取决于 系统线程执行任务的阻塞系数，默认为 IO 线程数 * 8
+    worker-threads: 32
+    # 是否配置直接内存（NIO 直接分配的对外内存）
+    direct-buffers: true
+    # 设置每个buffer的大小，越小的空间越容易被充分利用，不要设置太大，以免影响其他应用使用
+    # 默认值为 jvm 可以使用的最大内存
+#    buffer-size:
+
+
+# spring容器配置
+spring:
+  application:
+    name: kaoqin
+  profiles:
+    active: development
+  jackson:
+         time-zone: GMT+8
+         serialization:
+            WRITE_DATES_AS_TIMESTAMPS: true
+         date-format: com.fasterxml.jackson.databind.util.StdDateFormat
+         joda-date-time-format: yyyy-MM-dd HH:mm:ss.SSS
+  mvc:
+      favicon:
+        enabled: false
+    aop:
+      proxy-target-class: true
+    http:
+      multipart:
+        max-request-size: 1024Mb
+        max-file-size: 1024Mb
+logging:
+  config: classpath:logback-spring.xml
+
