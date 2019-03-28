@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!--业务操作数据源 -->
+    <bean id="dataSource" class="com.paxing.test.kaoqin.dynamicDatasource.DynamicDataSource">
+        <property name="targetDataSources">
+            <map key-type="java.lang.String">
+                <entry key="Master" value-ref="masterDataSource" />
+                <entry key="Slave" value-ref="slaveDataSource" />
+            </map>
+        </property>
+        <property name="defaultTargetDataSource" ref="masterDataSource">
+        </property>
+    </bean>
+
+    <!-- mysql数据源 -->
+    <bean id="dataSourceParent" abstract="true" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="connectionProperties" value="config.decrypt=true" />
+        <property name="driverClassName" value="${mvn.jdbc.driver}" />
+        <!-- 配置监控统计拦截的filters，去掉后监控界面sql无法统计 -->
+        <property name="filters" value="config" />
+
+        <!-- 配置初始化大小、最小、最大 -->
+        <property name="initialSize" value="${mvn.jdbc.initialPoolSize}" />
+        <property name="minIdle" value="0" />
+        <property name="maxActive" value="${mvn.jdbc.maxPoolSize}" />
+
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name="maxWait" value="60000" />
+
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="60000" />
+
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="300000" />
+
+        <property name="validationQuery" value="SELECT 'x'" />
+        <property name="testWhileIdle" value="true" />
+        <property name="testOnBorrow" value="false" />
+        <property name="testOnReturn" value="false" />
+
+        <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+        <property name="poolPreparedStatements" value="false" />
+        <property name="maxPoolPreparedStatementPerConnectionSize"
+                  value="-1" />
+
+        <!-- 每5分钟打印一次 -->
+        <!--<property name="timeBetweenLogStatsMillis" value="300000" />-->
+    </bean>
+
+    <bean id="masterDataSource" parent="dataSourceParent">
+        <property name="url" value="${mvn.master.jdbc.url}" />
+        <property name="username" value="${mvn.master.jdbc.username}" />
+        <property name="password" value="${mvn.master.jdbc.password}" />
+    </bean>
+
+    <bean id="slaveDataSource" parent="dataSourceParent">
+        <property name="url" value="${mvn.slave.jdbc.url}" />
+        <property name="username" value="${mvn.slave.jdbc.username}" />
+        <property name="password" value="${mvn.slave.jdbc.password}" />
+    </bean>
+
+    <!-- (事务管理)transaction manager, use JtaTransactionManager for global tx -->
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+          p:dataSource-ref="dataSource" />
+    <!-- 使用annotation定义事务 -->
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" order="3"/>
+
+    <!-- define the SqlSessionFactory -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean"
+          p:dataSource-ref="dataSource" p:typeAliasesPackage="classpath:com.lianjia.ehr.personnel.model"
+          p:configLocation="classpath:mybatis-config.xml" p:mapperLocations="classpath*:mapper/**/*Mapper.xml" />
+
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate"
+          scope="prototype">
+        <constructor-arg index="0" ref="sqlSessionFactory" />
+    </bean>
+
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.lianjia.ehr.personnel.dao"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+    </bean>
+</beans>
